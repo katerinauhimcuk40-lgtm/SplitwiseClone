@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "lxNWpHraiDw=",
+  "dgSpecHash": "skXZHEni7rM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Home\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj",
+  "projectFilePath": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Home\\.nuget\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
     "C:\\Users\\Home\\.nuget\\packages\\azure.identity\\1.17.1\\azure.identity.1.17.1.nupkg.sha512",
@@ -23,6 +23,7 @@
     "C:\\Users\\Home\\.nuget\\packages\\microsoft.entityframeworkcore.design\\10.0.13\\microsoft.entityframeworkcore.design.10.0.13.nupkg.sha512",
     "C:\\Users\\Home\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\10.0.13\\microsoft.entityframeworkcore.relational.10.0.13.nupkg.sha512",
     "C:\\Users\\Home\\.nuget\\packages\\microsoft.entityframeworkcore.sqlserver\\10.0.13\\microsoft.entityframeworkcore.sqlserver.10.0.13.nupkg.sha512",
+    "C:\\Users\\Home\\.nuget\\packages\\microsoft.entityframeworkcore.tools\\10.0.13\\microsoft.entityframeworkcore.tools.10.0.13.nupkg.sha512",
     "C:\\Users\\Home\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\10.0.13\\microsoft.extensions.caching.abstractions.10.0.13.nupkg.sha512",
     "C:\\Users\\Home\\.nuget\\packages\\microsoft.extensions.caching.memory\\10.0.13\\microsoft.extensions.caching.memory.10.0.13.nupkg.sha512",
     "C:\\Users\\Home\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.13\\microsoft.extensions.configuration.abstractions.10.0.13.nupkg.sha512",

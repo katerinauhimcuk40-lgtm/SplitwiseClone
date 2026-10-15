@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Home\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj": {}
+    "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Home\\Splitwise.Domain\\Splitwise.Domain.csproj": {
+    "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Domain\\Splitwise.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Home\\Splitwise.Domain\\Splitwise.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Domain\\Splitwise.Domain.csproj",
         "projectName": "Splitwise.Domain",
-        "projectPath": "C:\\Users\\Home\\Splitwise.Domain\\Splitwise.Domain.csproj",
+        "projectPath": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Domain\\Splitwise.Domain.csproj",
         "packagesPath": "C:\\Users\\Home\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Home\\Splitwise.Domain\\obj\\",
+        "outputPath": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -345,14 +345,14 @@
         }
       }
     },
-    "C:\\Users\\Home\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj": {
+    "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Home\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj",
         "projectName": "Splitwise.Infrastructure",
-        "projectPath": "C:\\Users\\Home\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj",
+        "projectPath": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Infrastructure\\Splitwise.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Home\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Home\\Splitwise.Infrastructure\\obj\\",
+        "outputPath": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -374,8 +374,8 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\Home\\Splitwise.Domain\\Splitwise.Domain.csproj": {
-                "projectPath": "C:\\Users\\Home\\Splitwise.Domain\\Splitwise.Domain.csproj"
+              "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Domain\\Splitwise.Domain.csproj": {
+                "projectPath": "C:\\Users\\Home\\SplitwiseClone\\Splitwise.Domain\\Splitwise.Domain.csproj"
               }
             }
           }
@@ -408,6 +408,12 @@
               "version": "[10.0.13, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[10.0.13, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
               "target": "Package",
               "version": "[10.0.13, )"
             }
