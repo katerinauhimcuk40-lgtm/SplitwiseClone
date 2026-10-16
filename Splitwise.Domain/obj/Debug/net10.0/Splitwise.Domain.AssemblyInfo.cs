@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Splitwise.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+86ece1a99e659258382607e6312ab86a43c7ed01")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e84b4d4492c3ab580fa222436c1c64b64d1fe6f8")]
 [assembly: System.Reflection.AssemblyProductAttribute("Splitwise.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Splitwise.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
