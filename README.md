@@ -82,3 +82,6 @@ cd SplitwiseClone
 git clone https://github.com/katerinauhimcuk40-lgtm/SplitwiseClone.git
 cd SplitwiseClone
 >>>>>>> 1c5d7e4ff31ec6201003f622953561cdde466e3e
+## Діаграма варіантів використання (Use Case Diagram)
+
+![Use Case Diagram](docs/images/use-case-diagram.png)
