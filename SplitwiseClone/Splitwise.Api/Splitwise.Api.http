@@ -1,0 +1,72 @@
+@Splitwise.Api_HostAddress = http://localhost:5013
+
+### 1. Реєстрація
+POST {{Splitwise.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "Passw0rd!"
+}
+
+### 2. Логін -> скопіюйте accessToken
+POST {{Splitwise.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "Passw0rd!"
+}
+
+### 3. Мій профіль
+GET {{Splitwise.Api_HostAddress}}/api/users/me
+Authorization: Bearer {{accessToken}}
+
+### 4. Створити групу
+POST {{Splitwise.Api_HostAddress}}/api/groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Поїздка в Карпати",
+  "description": "Витрати на вихідні"
+}
+
+### 5. Додати учасника за email
+POST {{Splitwise.Api_HostAddress}}/api/groups/1/members
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "user2@example.com"
+}
+
+### 6. Створити витрату (порівну між усіма учасниками)
+POST {{Splitwise.Api_HostAddress}}/api/expenses
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "groupId": 1,
+  "description": "Продукти",
+  "amount": 500.00
+}
+
+### 7. Витрати групи
+GET {{Splitwise.Api_HostAddress}}/api/expenses?groupId=1
+Authorization: Bearer {{accessToken}}
+
+### 8. Невалідний запит -> 400 з переліком помилок (FluentValidation)
+POST {{Splitwise.Api_HostAddress}}/api/expenses
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "groupId": 1,
+  "description": "",
+  "amount": -5
+}
+
+### 9. Неіснуюча група -> 404 (GroupNotFoundException)
+GET {{Splitwise.Api_HostAddress}}/api/groups/9999
+Authorization: Bearer {{accessToken}}
