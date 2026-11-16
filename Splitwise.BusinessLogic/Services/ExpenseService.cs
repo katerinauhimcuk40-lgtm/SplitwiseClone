@@ -33,7 +33,7 @@ public class ExpenseService : IExpenseService
     public async Task<ExpenseDto> GetByIdAsync(int expenseId, int userId, CancellationToken ct = default)
     {
         var expense = await QueryWithDetails().FirstOrDefaultAsync(e => e.Id == expenseId, ct)
-                      ?? throw new NotFoundException($"Витрату з id={expenseId} не знайдено.");
+                      ?? throw new ExpenseNotFoundException(expenseId);
 
         await _db.EnsureGroupMemberAsync(expense.GroupId, userId, ct);
         return expense.ToDto();
@@ -41,13 +41,8 @@ public class ExpenseService : IExpenseService
 
     public async Task<ExpenseDto> CreateAsync(int userId, CreateExpenseRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Description))
-            throw new BusinessRuleException("Опис витрати обов'язковий.");
-        if (request.Amount <= 0)
-            throw new BusinessRuleException("Сума витрати має бути більшою за нуль.");
-        if (decimal.Round(request.Amount, 2) != request.Amount)
-            throw new BusinessRuleException("Сума витрати може мати не більше двох знаків після коми.");
-
+        // Формат DTO (сума, описи, частки тощо) перевіряє CreateExpenseRequestValidator.
+        // Тут — лише правила, що потребують даних із БД.
         await _db.EnsureGroupMemberAsync(request.GroupId, userId, ct);
 
         var memberIds = await _db.GroupMembers
@@ -58,17 +53,17 @@ public class ExpenseService : IExpenseService
 
         var payerId = request.PaidById ?? userId;
         if (!memberIds.Contains(payerId))
-            throw new BusinessRuleException("Платник має бути учасником групи.");
+            throw new InvalidExpenseException("Платник має бути учасником групи.");
 
         var shares = request.Splits is { Count: > 0 }
-            ? ValidateCustomSplits(request.Splits, memberIds, request.Amount)
+            ? ValidateCustomSplits(request.Splits, memberIds)
             : CalculateEqualSplits(memberIds, request.Amount);
 
         var expense = new Expense
         {
             Description = request.Description.Trim(),
             Amount = request.Amount,
-            Date = request.Date ?? DateTime.UtcNow,
+            Date = NormalizeDate(request.Date),
             GroupId = request.GroupId,
             PaidById = payerId
         };
@@ -94,15 +89,32 @@ public class ExpenseService : IExpenseService
     public async Task DeleteAsync(int expenseId, int userId, CancellationToken ct = default)
     {
         var expense = await _db.Expenses.FirstOrDefaultAsync(e => e.Id == expenseId, ct)
-                      ?? throw new NotFoundException($"Витрату з id={expenseId} не знайдено.");
+                      ?? throw new ExpenseNotFoundException(expenseId);
 
         await _db.EnsureGroupMemberAsync(expense.GroupId, userId, ct);
 
         if (expense.PaidById != userId)
-            throw new ForbiddenException("Видалити витрату може лише той, хто її оплатив.");
+            throw new ExpenseDeletionNotAllowedException();
 
         _db.Expenses.Remove(expense);
         await _db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// PostgreSQL (timestamptz) приймає лише UTC: дата без часового поясу вважається UTC,
+    /// локальна — конвертується в UTC, відсутня — поточний момент.
+    /// </summary>
+    internal static DateTime NormalizeDate(DateTime? date)
+    {
+        if (date is null)
+            return DateTime.UtcNow;
+
+        return date.Value.Kind switch
+        {
+            DateTimeKind.Utc => date.Value,
+            DateTimeKind.Local => date.Value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(date.Value, DateTimeKind.Utc)
+        };
     }
 
     private IQueryable<Expense> QueryWithDetails() =>
@@ -129,20 +141,12 @@ public class ExpenseService : IExpenseService
         return result;
     }
 
+    /// <summary>Перевірка, що потребує даних групи: усі учасники розподілу мають бути її учасниками.</summary>
     private static List<(int UserId, decimal Amount)> ValidateCustomSplits(
-        List<ExpenseSplitRequest> splits, IReadOnlyList<int> memberIds, decimal amount)
+        List<ExpenseSplitRequest> splits, IReadOnlyList<int> memberIds)
     {
-        if (splits.Any(s => s.Amount <= 0 || decimal.Round(s.Amount, 2) != s.Amount))
-            throw new BusinessRuleException("Кожна частка має бути додатною сумою з не більше ніж двома знаками після коми.");
-
-        if (splits.GroupBy(s => s.UserId).Any(g => g.Count() > 1))
-            throw new BusinessRuleException("Користувач не може бути вказаний у розподілі більше одного разу.");
-
         if (splits.Any(s => !memberIds.Contains(s.UserId)))
-            throw new BusinessRuleException("Усі учасники розподілу мають бути учасниками групи.");
-
-        if (splits.Sum(s => s.Amount) != amount)
-            throw new BusinessRuleException("Сума часток має дорівнювати сумі витрати.");
+            throw new InvalidExpenseException("Усі учасники розподілу мають бути учасниками групи.");
 
         return splits.Select(s => (s.UserId, s.Amount)).ToList();
     }

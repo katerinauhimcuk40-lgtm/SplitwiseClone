@@ -10,8 +10,6 @@ namespace Splitwise.BusinessLogic.Services;
 
 public class GroupService : IGroupService
 {
-    private const int MaxNameLength = 100;
-
     private readonly IApplicationDbContext _db;
 
     public GroupService(IApplicationDbContext db)
@@ -40,16 +38,10 @@ public class GroupService : IGroupService
 
     public async Task<GroupDto> CreateAsync(int userId, CreateGroupRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
-            throw new BusinessRuleException("Назва групи обов'язкова.");
-
-        var name = request.Name.Trim();
-        if (name.Length > MaxNameLength)
-            throw new BusinessRuleException($"Назва групи не може бути довшою за {MaxNameLength} символів.");
-
+        // Формат вхідних даних перевіряє CreateGroupRequestValidator (FluentValidation).
         var group = new Group
         {
-            Name = name,
+            Name = request.Name.Trim(),
             Description = request.Description?.Trim() ?? string.Empty
         };
 
@@ -65,20 +57,17 @@ public class GroupService : IGroupService
     public async Task<GroupDto> AddMemberAsync(
         int groupId, int userId, AddGroupMemberRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Email))
-            throw new BusinessRuleException("Email користувача обов'язковий.");
-
         await _db.EnsureGroupMemberAsync(groupId, userId, ct);
 
         // Identity за замовчуванням нормалізує email через ToUpperInvariant().
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
         var newMember = await _db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, ct)
-                        ?? throw new NotFoundException("Користувача з таким email не знайдено.");
+                        ?? throw new UserNotFoundException("Користувача з таким email не знайдено.");
 
         var alreadyMember = await _db.GroupMembers
             .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == newMember.Id, ct);
         if (alreadyMember)
-            throw new ConflictException("Користувач уже є учасником групи.");
+            throw new UserAlreadyInGroupException();
 
         _db.GroupMembers.Add(new GroupMember { GroupId = groupId, UserId = newMember.Id });
         await _db.SaveChangesAsync(ct);
@@ -93,7 +82,7 @@ public class GroupService : IGroupService
             .Include(g => g.GroupMembers)
             .ThenInclude(gm => gm.User)
             .FirstOrDefaultAsync(g => g.Id == groupId, ct)
-            ?? throw new NotFoundException($"Групу з id={groupId} не знайдено.");
+            ?? throw new GroupNotFoundException(groupId);
 
         return group.ToDto();
     }

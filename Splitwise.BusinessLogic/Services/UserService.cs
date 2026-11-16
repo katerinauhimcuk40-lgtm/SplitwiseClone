@@ -19,7 +19,7 @@ public class UserService : IUserService
     public async Task<UserDto> GetCurrentAsync(int userId, CancellationToken ct = default)
     {
         var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct)
-                   ?? throw new NotFoundException("Користувача не знайдено.");
+                   ?? throw new UserNotFoundException();
         return user.ToDto();
     }
 

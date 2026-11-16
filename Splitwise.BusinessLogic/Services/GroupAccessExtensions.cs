@@ -12,10 +12,10 @@ internal static class GroupAccessExtensions
     {
         var groupExists = await db.Groups.AnyAsync(g => g.Id == groupId, ct);
         if (!groupExists)
-            throw new NotFoundException($"Групу з id={groupId} не знайдено.");
+            throw new GroupNotFoundException(groupId);
 
         var isMember = await db.GroupMembers.AnyAsync(gm => gm.GroupId == groupId && gm.UserId == userId, ct);
         if (!isMember)
-            throw new ForbiddenException("Ви не є учасником цієї групи.");
+            throw new NotGroupMemberException();
     }
 }

@@ -55,3 +55,18 @@ Content-Type: application/json
 ### 7. Витрати групи
 GET {{Splitwise.Api_HostAddress}}/api/expenses?groupId=1
 Authorization: Bearer {{accessToken}}
+
+### 8. Невалідний запит -> 400 з переліком помилок (FluentValidation)
+POST {{Splitwise.Api_HostAddress}}/api/expenses
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "groupId": 1,
+  "description": "",
+  "amount": -5
+}
+
+### 9. Неіснуюча група -> 404 (GroupNotFoundException)
+GET {{Splitwise.Api_HostAddress}}/api/groups/9999
+Authorization: Bearer {{accessToken}}
