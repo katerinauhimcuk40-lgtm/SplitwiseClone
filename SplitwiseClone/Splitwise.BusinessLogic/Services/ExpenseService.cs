@@ -63,7 +63,7 @@ public class ExpenseService : IExpenseService
         {
             Description = request.Description.Trim(),
             Amount = request.Amount,
-            Date = request.Date ?? DateTime.UtcNow,
+            Date = NormalizeDate(request.Date),
             GroupId = request.GroupId,
             PaidById = payerId
         };
@@ -98,6 +98,23 @@ public class ExpenseService : IExpenseService
 
         _db.Expenses.Remove(expense);
         await _db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// PostgreSQL (timestamptz) приймає лише UTC: дата без часового поясу вважається UTC,
+    /// локальна — конвертується в UTC, відсутня — поточний момент.
+    /// </summary>
+    internal static DateTime NormalizeDate(DateTime? date)
+    {
+        if (date is null)
+            return DateTime.UtcNow;
+
+        return date.Value.Kind switch
+        {
+            DateTimeKind.Utc => date.Value,
+            DateTimeKind.Local => date.Value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(date.Value, DateTimeKind.Utc)
+        };
     }
 
     private IQueryable<Expense> QueryWithDetails() =>

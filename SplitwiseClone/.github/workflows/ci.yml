@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -60,3 +60,64 @@ jobs:
           name: test-results
           path: TestResults/**
           if-no-files-found: warn
+
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build --tag splitwise-api:${{ github.sha }} .
+
+  deploy:
+    name: Deploy to Render
+    # Деплой лише для push у main і лише після успішних тестів та збірки образу
+    needs: [ build-and-test, docker-build ]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::Secret RENDER_DEPLOY_HOOK_URL не задано (Settings -> Secrets and variables -> Actions)"
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
+          echo "Деплой запущено для коміту ${GITHUB_SHA}"
+
+      - name: Smoke test (очікуємо нову версію на /version і 200 на /health)
+        env:
+          API_URL: ${{ vars.API_URL }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "::warning::Змінну репозиторію API_URL не задано — smoke test пропущено"
+            exit 0
+          fi
+          API_URL="${API_URL%/}"
+          for attempt in $(seq 1 40); do
+            body=$(curl --silent --max-time 30 "$API_URL/version" || true)
+            echo "[$attempt/40] /version -> $body"
+            if echo "$body" | grep -q "$EXPECTED_SHA"; then
+              curl --fail --silent --show-error --max-time 30 "$API_URL/health"
+              echo
+              echo "✅ Нова версія працює: $API_URL"
+              echo "### Deployed ✅" >> "$GITHUB_STEP_SUMMARY"
+              echo "$API_URL/swagger — commit \`$EXPECTED_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Нова версія не з'явилась за 10 хвилин"
+          exit 1

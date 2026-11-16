@@ -6,12 +6,12 @@ REST API для клону сервісу **Splitwise**, розроблений 
 
 ## 🛠 Технологічний стек
 - **Framework:** ASP.NET Core Web API (.NET 10)
-- **Database:** Microsoft SQL Server
+- **Database:** PostgreSQL (локально — Docker, у проді — [Neon](https://neon.tech))
 - **ORM:** Entity Framework Core (Code First)
 - **Auth:** ASP.NET Core Identity (Identity API endpoints, Bearer-токени)
 - **Validation:** FluentValidation 12
 - **Tests:** xUnit, EF Core InMemory, coverlet
-- **CI:** GitHub Actions
+- **CI/CD:** GitHub Actions → Docker → [Render](https://render.com)
 - **Documentation:** Swagger / OpenAPI
 
 ## 🏗 Архітектура
@@ -98,24 +98,71 @@ dotnet test --collect:"XPlat Code Coverage"
 ## 🔄 CI (GitHub Actions)
 Workflow `.github/workflows/ci.yml` запускається при кожному `push` і `pull request` у `main` (а також вручну): відновлює залежності, збирає solution у Release, запускає всі тести, рахує покриття і зберігає звіти (`.trx`, `coverage.cobertura.xml`) як artifact `test-results`. Підсумок покриття видно на сторінці запуску (Summary).
 
-## 🚀 Запуск проєкту
+## 🚀 Локальний запуск
+
+**Варіант 1 — Docker Compose (API + PostgreSQL):**
 
 ```bash
-git clone https://github.com/katerinauhimcuk40-lgtm/SplitwiseClone.git
-cd SplitwiseClone
-
-# 1. Створити міграцію (змінилась схема: таблиці Identity)
-dotnet ef migrations add InitialIdentity -p Splitwise.Infrastructure -s Splitwise.Api -o Migrations
-
-# 2. Застосувати до бази (LocalDB, рядок підключення у Splitwise.Api/appsettings.json)
-dotnet ef database update -p Splitwise.Infrastructure -s Splitwise.Api
-
-# 3. Запустити
-dotnet run --project Splitwise.Api
+docker compose up --build
+# Swagger: http://localhost:8080/swagger
 ```
 
-> Якщо БД `SplitwiseDb` була створена зі старою схемою — спершу виконайте
-> `dotnet ef database drop -p Splitwise.Infrastructure -s Splitwise.Api`.
+**Варіант 2 — `dotnet run` + локальний PostgreSQL** (рядок підключення в `Splitwise.Api/appsettings.json`):
+
+```bash
+docker run -d --name splitwise-db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=splitwise postgres:17
+dotnet run --project Splitwise.Api
+# Swagger: http://localhost:5013/swagger
+```
+
+Міграції застосовуються автоматично під час старту (`Database:MigrateOnStartup`).
+
+### Міграції EF Core (PostgreSQL)
+Міграції створюються один раз і комітяться в репозиторій. Якщо в `Splitwise.Infrastructure/Migrations` лежать старі міграції для SQL Server — видаліть папку й створіть нову:
+
+```bash
+dotnet ef migrations add InitialPostgres -p Splitwise.Infrastructure -s Splitwise.Api -o Migrations
+```
+
+## ☁️ Деплой (Neon + Render + GitHub Actions)
+
+```
+git push → GitHub Actions: build + tests + docker build → deploy hook → Render (Docker) → Neon (PostgreSQL)
+```
+
+### 1. База даних — Neon
+1. Створіть проєкт на [neon.tech](https://neon.tech) і скопіюйте **Connection string** (формат `postgresql://user:password@ep-xxx.neon.tech/neondb?sslmode=require`).
+2. У вікні Connection string вимкніть перемикач **Connection pooling** — потрібен прямий (не `-pooler`) хост, бо міграції EF Core використовують advisory locks.
+
+Застосунок сам розуміє формат URI (`ConnectionStringResolver`), конвертувати рядок вручну не треба.
+
+### 2. API — Render
+1. Закомітьте й запуште репозиторій на GitHub (разом із міграціями).
+2. Render → **New → Blueprint** → оберіть репозиторій (підхопиться `render.yaml`) **або** New → Web Service → Runtime **Docker**.
+3. У **Environment** додайте змінну `DATABASE_URL` = рядок підключення з Neon.
+4. Автодеплой із Git вимкнено (`autoDeployTrigger: off`) — деплоєм керує GitHub Actions.
+5. Settings → **Deploy Hook** → скопіюйте URL.
+
+### 3. CD — GitHub Actions
+У репозиторії: **Settings → Secrets and variables → Actions**:
+
+| Тип | Назва | Значення |
+|---|---|---|
+| Secret | `RENDER_DEPLOY_HOOK_URL` | Deploy Hook URL з Render |
+| Variable | `API_URL` | `https://<ваш-сервіс>.onrender.com` |
+
+Також створіть **Environment** `production` (Settings → Environments), якщо його ще немає.
+
+Workflow `.github/workflows/ci.yml`: тести та збірка Docker-образу → (тільки `push` у `main`) виклик deploy hook → smoke test: чекає, поки `/version` поверне SHA щойно запушеного коміту, і перевіряє `/health`.
+
+### Службові ендпоінти
+| Ендпоінт | Призначення |
+|---|---|
+| `/health` | health check для Render |
+| `/version` | SHA задеплоєного коміту |
+| `/swagger` | документація API |
+
+> На безкоштовному плані Render сервіс «засинає» після 15 хв без запитів — перший запит після паузи може тривати ~1 хв. Bearer-токени Identity після перезапуску сервісу стають недійсними (ключі Data Protection не зберігаються) — потрібно залогінитись повторно.
 
 ## Діаграма варіантів використання (Use Case Diagram)
 

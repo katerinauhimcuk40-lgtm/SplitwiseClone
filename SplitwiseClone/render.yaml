@@ -1,0 +1,16 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: splitwise-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    # Деплой запускає GitHub Actions (deploy hook) лише після успішних тестів
+    autoDeployTrigger: "off"
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Рядок підключення до Neon — задається вручну в Render Dashboard
+      - key: DATABASE_URL
+        sync: false

@@ -113,6 +113,45 @@ public class ExpenseServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_DateWithoutKind_IsTreatedAsUtc()
+    {
+        var s = await CreateScenarioAsync();
+        await using var _ = s.Db;
+        var unspecified = new DateTime(2026, 5, 20, 10, 30, 0, DateTimeKind.Unspecified);
+
+        var result = await s.Service.CreateAsync(s.Alice.Id, Request(s.Group.Id, 10m, date: unspecified));
+
+        Assert.Equal(DateTimeKind.Utc, result.Date.Kind);
+        Assert.Equal(unspecified.Ticks, result.Date.Ticks);
+    }
+
+    [Fact]
+    public async Task CreateAsync_LocalDate_IsConvertedToUtc()
+    {
+        var s = await CreateScenarioAsync();
+        await using var _ = s.Db;
+        var local = new DateTime(2026, 5, 20, 10, 30, 0, DateTimeKind.Local);
+
+        var result = await s.Service.CreateAsync(s.Alice.Id, Request(s.Group.Id, 10m, date: local));
+
+        Assert.Equal(DateTimeKind.Utc, result.Date.Kind);
+        Assert.Equal(local.ToUniversalTime(), result.Date);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithoutDate_UsesCurrentUtcTime()
+    {
+        var s = await CreateScenarioAsync();
+        await using var _ = s.Db;
+        var before = DateTime.UtcNow;
+
+        var result = await s.Service.CreateAsync(s.Alice.Id, Request(s.Group.Id, 10m));
+
+        Assert.Equal(DateTimeKind.Utc, result.Date.Kind);
+        Assert.InRange(result.Date, before, DateTime.UtcNow);
+    }
+
+    [Fact]
     public async Task CreateAsync_RequesterNotMember_ThrowsForbidden()
     {
         var s = await CreateScenarioAsync();

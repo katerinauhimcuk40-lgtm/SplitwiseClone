@@ -44,15 +44,15 @@ public class SplitwiseDbContext : IdentityDbContext<User, IdentityRole<int>, int
 
         modelBuilder.Entity<Expense>()
             .Property(e => e.Amount)
-            .HasColumnType("decimal(18,2)");
+            .HasPrecision(18, 2);
 
         modelBuilder.Entity<ExpenseSplit>()
             .Property(es => es.Amount)
-            .HasColumnType("decimal(18,2)");
+            .HasPrecision(18, 2);
 
         modelBuilder.Entity<Settlement>()
             .Property(s => s.Amount)
-            .HasColumnType("decimal(18,2)");
+            .HasPrecision(18, 2);
 
         modelBuilder.Entity<Settlement>()
             .HasOne(s => s.Payer)
