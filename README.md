@@ -2,6 +2,10 @@
 
 ![CI](https://github.com/katerinauhimcuk40-lgtm/SplitwiseClone/actions/workflows/ci.yml/badge.svg)
 
+🌐 **Demo (Swagger):** https://splitwiseclone-88gy.onrender.com/swagger
+
+> Сервіс працює на безкоштовному плані Render: після 15 хвилин без запитів він «засинає», тож перший запит може тривати до хвилини.
+
 REST API для клону сервісу **Splitwise**, розроблений на **.NET 10 / EF Core** з дотриманням принципів **Clean Architecture**.
 
 ## 🛠 Технологічний стек
