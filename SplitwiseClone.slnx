@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="Splitwise.Api/Splitwise.Api.csproj" />
-  <Project Path="Splitwise.Domain/Splitwise.Domain.csproj" />
-  <Project Path="Splitwise.Infrastructure/Splitwise.Infrastructure.csproj" />
-</Solution>
