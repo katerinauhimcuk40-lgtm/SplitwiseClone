@@ -1,5 +1,7 @@
 # Splitwise Clone (Backend API)
 
+![CI](https://github.com/katerinauhimcuk40-lgtm/SplitwiseClone/actions/workflows/ci.yml/badge.svg)
+
 REST API для клону сервісу **Splitwise**, розроблений на **.NET 10 / EF Core** з дотриманням принципів **Clean Architecture**.
 
 ## 🛠 Технологічний стек
@@ -8,6 +10,8 @@ REST API для клону сервісу **Splitwise**, розроблений 
 - **ORM:** Entity Framework Core (Code First)
 - **Auth:** ASP.NET Core Identity (Identity API endpoints, Bearer-токени)
 - **Validation:** FluentValidation 12
+- **Tests:** xUnit, EF Core InMemory, coverlet
+- **CI:** GitHub Actions
 - **Documentation:** Swagger / OpenAPI
 
 ## 🏗 Архітектура
@@ -17,6 +21,7 @@ Splitwise.Api             → контролери (тільки HTTP), Program.
 Splitwise.BusinessLogic   → сервіси з бізнес-логікою, DTO, виняткові ситуації, IApplicationDbContext
 Splitwise.Infrastructure  → SplitwiseDbContext (EF Core + Identity), міграції
 Splitwise.Domain          → сутності (User, Group, GroupMember, Expense, ExpenseSplit, Settlement)
+Splitwise.Tests           → unit-тести (xUnit)
 ```
 
 Залежності: `Api → BusinessLogic → Domain`, `Infrastructure → BusinessLogic → Domain`.
@@ -70,6 +75,28 @@ AppException (ErrorCode)
   "code": "RequestValidation"
 }
 ```
+
+## 🧪 Unit-тести
+Проєкт `Splitwise.Tests` (xUnit). Сервіси тестуються на `InMemory`-базі EF Core, окрема ізольована база на кожен тест.
+
+| Що покрито | Файли |
+|---|---|
+| Бізнес-логіка сервісів (групи, витрати, користувачі) | `Services/*ServiceTests.cs` |
+| FluentValidation-валідатори DTO | `Validators/*Tests.cs` |
+| Глобальні обробники помилок, ієрархія винятків | `Api/AppExceptionHandlerTests.cs` |
+| Фільтр валідації вхідних DTO | `Api/ValidationFilterTests.cs` |
+| Отримання Id користувача з токена | `Api/ClaimsPrincipalExtensionsTests.cs` |
+
+Запуск локально:
+
+```bash
+dotnet test
+# з покриттям коду
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+## 🔄 CI (GitHub Actions)
+Workflow `.github/workflows/ci.yml` запускається при кожному `push` і `pull request` у `main` (а також вручну): відновлює залежності, збирає solution у Release, запускає всі тести, рахує покриття і зберігає звіти (`.trx`, `coverage.cobertura.xml`) як artifact `test-results`. Підсумок покриття видно на сторінці запуску (Summary).
 
 ## 🚀 Запуск проєкту
 

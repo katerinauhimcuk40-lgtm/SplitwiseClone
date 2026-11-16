@@ -3,4 +3,5 @@
   <Project Path="Splitwise.BusinessLogic/Splitwise.BusinessLogic.csproj" />
   <Project Path="Splitwise.Domain/Splitwise.Domain.csproj" />
   <Project Path="Splitwise.Infrastructure/Splitwise.Infrastructure.csproj" />
+  <Project Path="Splitwise.Tests/Splitwise.Tests.csproj" />
 </Solution>

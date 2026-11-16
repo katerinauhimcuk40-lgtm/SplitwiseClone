@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore SplitwiseClone.slnx
+
+      - name: Build
+        run: dotnet build SplitwiseClone.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test SplitwiseClone.slnx
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          file=$(find TestResults -name 'coverage.cobertura.xml' | head -n 1)
+          if [ -n "$file" ]; then
+            rate=$(grep -o 'line-rate="[0-9.]*"' "$file" | head -n 1 | grep -o '[0-9.]*')
+            echo "### Code coverage" >> "$GITHUB_STEP_SUMMARY"
+            echo "Line coverage: $(awk "BEGIN { printf \"%.1f\", $rate * 100 }")%" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Coverage report not found" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**
+          if-no-files-found: warn
